@@ -6,7 +6,6 @@ use uuid::Uuid;
 #[derive(FromRow)]
 pub struct PoseRow {
     pub id: Uuid,
-    pub name: Option<String>,
     pub url: String,
     pub created_at: Option<chrono::DateTime<chrono::Utc>>,
 }
@@ -15,7 +14,6 @@ impl From<PoseRow> for Pose {
     fn from(row: PoseRow) -> Self {
         Pose {
             id: row.id,
-            name: row.name,
             url: row.url,
             created_at: row.created_at,
         }
@@ -117,7 +115,7 @@ impl HashtagsRepository for HashtagsRepositoryImpl {
         for &hashtag_id in hashtag_ids {
             sqlx::query(
                 r#"
-                INSERT INTO hashtag_post (post_id, hashtag_id)
+                INSERT INTO hashtag_pose (post_id, hashtag_id)
                 VALUES ($1, $2)
                 ON CONFLICT (post_id, hashtag_id) DO NOTHING
                 "#,
@@ -179,7 +177,7 @@ impl HashtagsRepository for HashtagsRepositoryImpl {
     async fn get_poses_by_hashtag(&self, hashtag_id: Uuid) -> Result<Vec<Pose>, DomainError> {
         let rows = sqlx::query_as::<_, PoseRow>(
             r#"
-            SELECT p.id, p.name, p.url, p.created_at
+            SELECT p.id, p.url, p.created_at
             FROM poses p
             INNER JOIN hashtag_image hi ON hi.pose_id = p.id
             WHERE hi.hashtag_id = $1
@@ -202,7 +200,7 @@ impl HashtagsRepository for HashtagsRepositoryImpl {
         let offset = page.saturating_mul(limit);
         let rows = sqlx::query_as::<_, PoseRow>(
             r#"
-            SELECT p.id, p.name, p.url, p.created_at
+            SELECT p.id, p.url, p.created_at
             FROM poses p
             INNER JOIN hashtag_image hi ON hi.pose_id = p.id
             WHERE hi.hashtag_id = $1

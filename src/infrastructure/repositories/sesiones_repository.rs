@@ -25,7 +25,6 @@ impl From<SesionRow> for Sesion {
 #[derive(FromRow)]
 struct PoseRow {
     id: Uuid,
-    name: Option<String>,
     url: String,
     created_at: Option<chrono::DateTime<chrono::Utc>>,
 }
@@ -34,7 +33,6 @@ impl From<PoseRow> for Pose {
     fn from(row: PoseRow) -> Self {
         Pose {
             id: row.id,
-            name: row.name,
             url: row.url,
             created_at: row.created_at,
         }
@@ -77,7 +75,7 @@ impl SesionesRepository for SesionesRepositoryImpl {
     async fn get_poses_by_sesion(&self, sesion_id: Uuid) -> Result<Vec<Pose>, DomainError> {
         let rows = sqlx::query_as::<_, PoseRow>(
             r#"
-            SELECT p.id, p.name, p.url, p.created_at
+            SELECT p.id, p.url, p.created_at
             FROM poses p
             INNER JOIN sesion_image si ON si.pose_id = p.id
             WHERE si.sesion_id = $1

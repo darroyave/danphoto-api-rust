@@ -162,7 +162,7 @@ pub async fn create_pose(
     let url = save_pose_image_base64(&state.poses_images_dir, &id, &body.image_base64)?;
     let uc = CreatePoseUseCase::new(Arc::clone(&state.poses_repo));
     let item = uc
-        .execute_with_id(id, body.name.as_deref(), &url)
+        .execute_with_id(id, &url)
         .await?;
     Ok(Json(PoseResponse::from(item)))
 }

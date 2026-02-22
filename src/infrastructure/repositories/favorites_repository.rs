@@ -6,7 +6,6 @@ use uuid::Uuid;
 #[derive(FromRow)]
 pub struct PoseRow {
     pub id: Uuid,
-    pub name: Option<String>,
     pub url: String,
     pub created_at: Option<chrono::DateTime<chrono::Utc>>,
 }
@@ -15,7 +14,6 @@ impl From<PoseRow> for Pose {
     fn from(row: PoseRow) -> Self {
         Pose {
             id: row.id,
-            name: row.name,
             url: row.url,
             created_at: row.created_at,
         }
@@ -100,7 +98,7 @@ impl FavoritesRepository for FavoritesRepositoryImpl {
     async fn get_favorite_poses(&self, user_id: Uuid) -> Result<Vec<Pose>, DomainError> {
         let rows = sqlx::query_as::<_, PoseRow>(
             r#"
-            SELECT p.id, p.name, p.url, p.created_at
+            SELECT p.id, p.url, p.created_at
             FROM poses p
             INNER JOIN favoritos f ON f.pose_id = p.id
             WHERE f.user_id = $1

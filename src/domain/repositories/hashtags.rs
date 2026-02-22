@@ -15,7 +15,7 @@ pub trait HashtagsRepository: Send + Sync {
     async fn delete(&self, id: Uuid) -> Result<(), DomainError>;
     /// Hashtags asociados a una pose (tabla hashtag_image).
     async fn get_hashtags_by_pose(&self, pose_id: Uuid) -> Result<Vec<Hashtag>, DomainError>;
-    /// Añade hashtags a un post (tabla hashtag_post). Idempotente por (post_id, hashtag_id).
+    /// Añade hashtags a un post (tabla hashtag_pose). Idempotente por (post_id, hashtag_id).
     async fn add_hashtags_to_post(
         &self,
         post_id: Uuid,
