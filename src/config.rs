@@ -50,7 +50,7 @@ impl Config {
             acquire_timeout_secs: std::env::var("DATABASE_ACQUIRE_TIMEOUT_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok())
-                .unwrap_or(5),
+                .unwrap_or(30),
             database_idle_timeout_secs: std::env::var("DATABASE_IDLE_TIMEOUT_SECS")
                 .ok()
                 .and_then(|s| s.parse().ok()),

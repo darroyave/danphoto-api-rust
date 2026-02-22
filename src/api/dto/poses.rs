@@ -6,6 +6,9 @@ use uuid::Uuid;
 pub struct CreatePoseRequest {
     /// Imagen en base64 (acepta prefijo `data:image/xxx;base64,` o solo el payload).
     pub image_base64: String,
+    /// IDs de hashtags a asociar a la pose (se insertan en la tabla de relación pose-hashtag).
+    #[serde(default)]
+    pub hashtag_ids: Option<Vec<Uuid>>,
 }
 
 #[derive(Debug, Serialize, ToSchema)]

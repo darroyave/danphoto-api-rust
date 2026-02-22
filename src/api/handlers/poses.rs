@@ -164,6 +164,15 @@ pub async fn create_pose(
     let item = uc
         .execute_with_id(id, &url)
         .await?;
+    if let Some(ids) = &body.hashtag_ids {
+        for &hashtag_id in ids {
+            state
+                .hashtags_repo
+                .add_hashtag_to_pose(item.id, hashtag_id)
+                .await
+                .map_err(ApiError)?;
+        }
+    }
     Ok(Json(PoseResponse::from(item)))
 }
 
