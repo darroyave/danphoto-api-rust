@@ -12,7 +12,6 @@ pub trait PosesRepository: Send + Sync {
     async fn get_all(&self) -> Result<Vec<Pose>, DomainError>;
     async fn get_paginated(&self, page: u32, limit: u32) -> Result<Vec<Pose>, DomainError>;
     async fn get_by_id(&self, id: Uuid) -> Result<Option<Pose>, DomainError>;
-    async fn create(&self, name: Option<&str>, url: &str) -> Result<Pose, DomainError>;
     /// Crea una pose con id conocido (para guardar la imagen con ese id como nombre de archivo).
     async fn create_with_id(&self, id: Uuid, name: Option<&str>, url: &str) -> Result<Pose, DomainError>;
     async fn delete(&self, id: Uuid) -> Result<(), DomainError>;
