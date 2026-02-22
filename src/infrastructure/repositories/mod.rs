@@ -1,0 +1,11 @@
+pub mod auth_repository;
+pub mod eventos_repository;
+pub mod favorites_repository;
+pub mod hashtags_repository;
+pub mod places_repository;
+pub mod portfolio_repository;
+pub mod poses_repository;
+pub mod posts_repository;
+pub mod sesiones_repository;
+pub mod theme_of_the_day_repository;
+pub mod usuarios_repository;
