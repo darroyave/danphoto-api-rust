@@ -26,4 +26,8 @@ pub struct AppState {
     pub theme_of_the_day_images_dir: String,
     /// Carpeta donde se guardan las imágenes de poses (desde config).
     pub poses_images_dir: String,
+    /// Carpeta donde se guardan las imágenes de posts (desde config).
+    pub posts_images_dir: String,
+    /// Carpeta donde se guardan las imágenes del portfolio (desde config).
+    pub portfolio_images_dir: String,
 }

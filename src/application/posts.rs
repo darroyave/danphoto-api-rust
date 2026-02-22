@@ -77,13 +77,15 @@ impl CreatePostUseCase {
         Self { repo }
     }
 
-    pub async fn execute(
+    /// Crea un post con id conocido (para imágenes guardadas como {id}.{ext}).
+    pub async fn execute_with_id(
         &self,
+        id: Uuid,
         description: Option<&str>,
         url: Option<&str>,
         user_id: Option<Uuid>,
     ) -> Result<Post, DomainError> {
-        self.repo.create(description, url, user_id).await
+        self.repo.create_with_id(id, description, url, user_id).await
     }
 }
 

@@ -86,19 +86,21 @@ impl PostsRepository for PostsRepositoryImpl {
         Ok(row.map(Post::from))
     }
 
-    async fn create(
+    async fn create_with_id(
         &self,
+        id: Uuid,
         description: Option<&str>,
         url: Option<&str>,
         user_id: Option<Uuid>,
     ) -> Result<Post, DomainError> {
         let row = sqlx::query_as::<_, PostRow>(
             r#"
-            INSERT INTO posts (description, url, user_id)
-            VALUES ($1, $2, $3)
+            INSERT INTO posts (id, description, url, user_id)
+            VALUES ($1, $2, $3, $4)
             RETURNING id, description, url, user_id, theme_of_the_day_id, created_at
             "#,
         )
+        .bind(id)
         .bind(description)
         .bind(url)
         .bind(user_id)

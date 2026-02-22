@@ -21,8 +21,8 @@ use super::handlers::hashtags::{
 };
 use super::handlers::portfolio::{
     add_portfolio_image, create_portfolio_category, delete_portfolio_category,
-    delete_portfolio_image, get_portfolio_images, list_portfolio_categories,
-    update_portfolio_category,
+    delete_portfolio_image, get_portfolio_image, get_portfolio_images,
+    list_portfolio_categories, update_portfolio_category,
 };
 use super::handlers::places::{
     create_place, delete_place, get_place, list_places, update_place,
@@ -32,8 +32,8 @@ use super::handlers::poses::{
     get_poses_by_hashtag_paginated, list_poses, list_poses_paginated, update_pose_hashtags,
 };
 use super::handlers::posts::{
-    create_post, delete_post, get_post, get_posts_by_theme_of_the_day, list_posts,
-    list_posts_paginated,
+    create_post, delete_post, get_post, get_post_image, get_posts_by_theme_of_the_day,
+    list_posts, list_posts_paginated,
 };
 use super::handlers::sesiones::{
     add_favorites_to_sesion, add_poses_to_sesion, create_sesion, create_sesion_from_favorites,
@@ -107,10 +107,12 @@ pub fn create_router(state: AppState, config: &crate::config::Config) -> Router 
         .route("/api/posts", get(list_posts).post(create_post))
         .route("/api/posts/paginated", get(list_posts_paginated))
         .route("/api/posts/theme-of-the-day/{theme_of_the_day_id}", get(get_posts_by_theme_of_the_day))
+        .route("/api/posts/{id}/image", get(get_post_image))
         .route("/api/posts/{id}", get(get_post).delete(delete_post))
         .route("/api/portfolio/categories", get(list_portfolio_categories).post(create_portfolio_category))
         .route("/api/portfolio/categories/{id}", put(update_portfolio_category).delete(delete_portfolio_category))
         .route("/api/portfolio/categories/{category_id}/images", get(get_portfolio_images).post(add_portfolio_image))
+        .route("/api/portfolio/images/{id}/image", get(get_portfolio_image))
         .route("/api/portfolio/images/{id}", delete(delete_portfolio_image))
         .route("/api/favorites/poses", get(get_favorite_poses))
         .route("/api/favorites/poses/{pose_id}", get(is_pose_favorite).post(add_pose_to_favorites).delete(remove_pose_from_favorites))

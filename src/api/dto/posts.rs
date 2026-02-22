@@ -5,7 +5,8 @@ use uuid::Uuid;
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct CreatePostRequest {
     pub description: Option<String>,
-    pub url: Option<String>,
+    /// Imagen en base64 (acepta prefijo `data:image/xxx;base64,` o solo el payload). Si se envía, la URL del post será /api/posts/{id}/image.
+    pub image_base64: String,
 }
 
 #[derive(Debug, Serialize, ToSchema)]

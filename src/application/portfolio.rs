@@ -102,15 +102,17 @@ impl AddPortfolioImageUseCase {
         Self { repo }
     }
 
-    pub async fn execute(
+    /// Añade una imagen con id conocido (imagen guardada como {id}.{ext}).
+    pub async fn execute_with_id(
         &self,
+        id: Uuid,
         category_id: Uuid,
         url: &str,
     ) -> Result<PortfolioImage, DomainError> {
         if url.trim().is_empty() {
             return Err(DomainError::Validation("La URL es requerida".to_string()));
         }
-        self.repo.add_image(category_id, url).await
+        self.repo.add_image_with_id(id, category_id, url).await
     }
 }
 

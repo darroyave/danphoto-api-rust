@@ -16,8 +16,10 @@ pub trait PostsRepository: Send + Sync {
         theme_of_the_day_id: &str,
     ) -> Result<Vec<Post>, DomainError>;
     async fn get_by_id(&self, id: Uuid) -> Result<Option<Post>, DomainError>;
-    async fn create(
+    /// Crea un post con id conocido (para guardar la imagen con ese id como nombre de archivo).
+    async fn create_with_id(
         &self,
+        id: Uuid,
         description: Option<&str>,
         url: Option<&str>,
         user_id: Option<Uuid>,

@@ -1,9 +1,14 @@
 // Handlers de Portfolio (Kotlin domain/cases/portfolio)
 
 use axum::{
+    body::Body,
     extract::{Path, Query, State},
+    http::{header, StatusCode},
+    response::IntoResponse,
     Json,
 };
+use base64::Engine;
+use std::path::Path as StdPath;
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -25,6 +30,41 @@ use crate::application::{
 pub struct PaginationQuery {
     pub page: Option<u32>,
     pub limit: Option<u32>,
+}
+
+/// Decodifica imagen base64 y la guarda en dir/{id}.{ext}. Devuelve la URL: /api/portfolio/images/{id}/image.
+fn save_portfolio_image_base64(
+    dir: &str,
+    id: &Uuid,
+    image_base64: &str,
+) -> Result<String, ApiError> {
+    let (payload, ext) = if let Some(rest) = image_base64.strip_prefix("data:") {
+        let (mime, b64) = rest
+            .split_once(";base64,")
+            .ok_or_else(|| ApiError(crate::domain::DomainError::Validation("formato base64 inválido: se esperaba data:image/...;base64,...".to_string())))?;
+        let ext = if mime.trim().to_lowercase().starts_with("image/png") {
+            "png"
+        } else {
+            "jpg"
+        };
+        (b64.trim(), ext)
+    } else {
+        (image_base64.trim(), "jpg")
+    };
+
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(payload)
+        .map_err(|e| ApiError(crate::domain::DomainError::Validation(format!("base64 inválido: {}", e))))?;
+    if bytes.is_empty() {
+        return Err(ApiError(crate::domain::DomainError::Validation("imagen vacía".to_string())));
+    }
+
+    std::fs::create_dir_all(dir).map_err(|e| ApiError(crate::domain::DomainError::Repository(anyhow::Error::from(e))))?;
+    let filename = format!("{}.{}", id, ext);
+    let path = StdPath::new(dir).join(&filename);
+    std::fs::write(&path, &bytes).map_err(|e| ApiError(crate::domain::DomainError::Repository(anyhow::Error::from(e))))?;
+
+    Ok(format!("/api/portfolio/images/{}/image", id))
 }
 
 /// Lista categorías del portfolio.
@@ -147,7 +187,7 @@ pub async fn delete_portfolio_category(
     Ok(axum::http::StatusCode::NO_CONTENT)
 }
 
-/// Añade una imagen a una categoría del portfolio.
+/// Añade una imagen (base64) a una categoría del portfolio. La imagen se guarda en disco; la URL será /api/portfolio/images/{id}/image.
 #[utoipa::path(
     post,
     path = "/api/portfolio/categories/{category_id}/images",
@@ -158,7 +198,7 @@ pub async fn delete_portfolio_category(
     responses(
         (status = 200, description = "Imagen añadida", body = PortfolioImageResponse),
         (status = 401, description = "No autorizado", body = crate::api::dto::ErrorResponse),
-        (status = 400, description = "URL vacía", body = crate::api::dto::ErrorResponse),
+        (status = 400, description = "Imagen base64 vacía o inválida", body = crate::api::dto::ErrorResponse),
         (status = 500, description = "Error interno", body = crate::api::dto::ErrorResponse),
     ),
 )]
@@ -168,9 +208,55 @@ pub async fn add_portfolio_image(
     Path(category_id): Path<Uuid>,
     Json(body): Json<AddPortfolioImageRequest>,
 ) -> Result<Json<PortfolioImageResponse>, ApiError> {
+    if body.image_base64.trim().is_empty() {
+        return Err(ApiError(crate::domain::DomainError::Validation(
+            "image_base64 es requerido".to_string(),
+        )));
+    }
+    let id = Uuid::new_v4();
+    let url = save_portfolio_image_base64(&state.portfolio_images_dir, &id, &body.image_base64)?;
     let uc = AddPortfolioImageUseCase::new(Arc::clone(&state.portfolio_repo));
-    let item = uc.execute(category_id, &body.url).await?;
+    let item = uc.execute_with_id(id, category_id, &url).await?;
     Ok(Json(PortfolioImageResponse::from(item)))
+}
+
+/// Sirve la imagen de un ítem del portfolio (público).
+#[utoipa::path(
+    get,
+    path = "/api/portfolio/images/{id}/image",
+    tag = "portfolio",
+    params(("id" = Uuid, Path, description = "UUID de la imagen")),
+    responses(
+        (status = 200, description = "Imagen del portfolio", content_type = "image/*"),
+        (status = 404, description = "Imagen no encontrada"),
+    ),
+)]
+pub async fn get_portfolio_image(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> Result<impl IntoResponse, ApiError> {
+    let dir = StdPath::new(&state.portfolio_images_dir);
+    for ext in ["png", "jpg", "jpeg"] {
+        let path = dir.join(format!("{}.{}", id, ext));
+        if path.exists() {
+            let bytes = std::fs::read(&path)
+                .map_err(|e| ApiError(crate::domain::DomainError::Repository(anyhow::Error::from(e))))?;
+            let content_type = if ext == "png" {
+                "image/png"
+            } else {
+                "image/jpeg"
+            };
+            return Ok((
+                StatusCode::OK,
+                [(header::CONTENT_TYPE, content_type)],
+                Body::from(bytes),
+            ));
+        }
+    }
+    Err(ApiError(crate::domain::DomainError::NotFound(format!(
+        "Imagen no encontrada para el portfolio {}",
+        id
+    ))))
 }
 
 /// Elimina una imagen del portfolio.

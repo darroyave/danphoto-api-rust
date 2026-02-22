@@ -29,6 +29,10 @@ pub struct Config {
     pub theme_of_the_day_images_dir: String,
     /// Carpeta donde se guardan las imágenes de poses (POST con imagen base64).
     pub poses_images_dir: String,
+    /// Carpeta donde se guardan las imágenes de posts (POST con imagen base64).
+    pub posts_images_dir: String,
+    /// Carpeta donde se guardan las imágenes del portfolio (POST con imagen base64).
+    pub portfolio_images_dir: String,
 }
 
 impl Config {
@@ -74,6 +78,10 @@ impl Config {
                 .unwrap_or_else(|_| "./uploads/theme-of-the-day".to_string()),
             poses_images_dir: std::env::var("POSES_IMAGES_DIR")
                 .unwrap_or_else(|_| "./uploads/poses".to_string()),
+            posts_images_dir: std::env::var("POSTS_IMAGES_DIR")
+                .unwrap_or_else(|_| "./uploads/posts".to_string()),
+            portfolio_images_dir: std::env::var("PORTFOLIO_IMAGES_DIR")
+                .unwrap_or_else(|_| "./uploads/portfolio".to_string()),
         }
     }
 

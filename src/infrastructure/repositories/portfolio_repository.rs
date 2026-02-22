@@ -125,18 +125,20 @@ impl PortfolioRepository for PortfolioRepositoryImpl {
         Ok(())
     }
 
-    async fn add_image(
+    async fn add_image_with_id(
         &self,
+        id: Uuid,
         category_id: Uuid,
         url: &str,
     ) -> Result<PortfolioImage, DomainError> {
         let row = sqlx::query_as::<_, PortfolioImageRow>(
             r#"
-            INSERT INTO portfolio_image (portfolio_category_id, url)
-            VALUES ($1, $2)
+            INSERT INTO portfolio_image (id, portfolio_category_id, url)
+            VALUES ($1, $2, $3)
             RETURNING id, portfolio_category_id, url, created_at
             "#,
         )
+        .bind(id)
         .bind(category_id)
         .bind(url)
         .fetch_one(&self.pool)
