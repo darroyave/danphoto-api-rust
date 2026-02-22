@@ -1,0 +1,32 @@
+[package]
+name = "danphoto-api"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# API
+axum = { version = "0.8.8", features = ["json"] }
+tower-http = { version = "0.6.8", features = ["cors", "trace"] }
+tower = "0.5.3"
+tower_governor = { version = "0.8", features = ["axum"] }
+utoipa = { version = "5.4.0", features = ["chrono", "uuid"] }
+utoipa-swagger-ui = { version = "9.0.2", features = ["axum"] }
+
+# Serialización
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+
+# Base de datos
+sqlx = { version = "0.8.6", features = ["runtime-tokio", "postgres", "uuid", "chrono"] }
+
+# Utilidades
+base64 = "0.22"
+dotenvy = "0.15"
+uuid = { version = "1.21", features = ["v4", "serde"] }
+jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }
+bcrypt = "0.18.0"
+chrono = { version = "0.4.43", features = ["serde"] }
+thiserror = "2.0.18"
+anyhow = "1.0.102"
+async-trait = "0.1.89"
+tokio = { version = "1.49.0", features = ["full"] }
