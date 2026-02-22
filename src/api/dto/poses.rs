@@ -5,7 +5,8 @@ use uuid::Uuid;
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct CreatePoseRequest {
     pub name: Option<String>,
-    pub url: String,
+    /// Imagen en base64 (acepta prefijo `data:image/xxx;base64,` o solo el payload).
+    pub image_base64: String,
 }
 
 #[derive(Debug, Serialize, ToSchema)]

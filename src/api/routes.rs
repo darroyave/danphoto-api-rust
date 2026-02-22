@@ -28,8 +28,8 @@ use super::handlers::places::{
     create_place, delete_place, get_place, list_places, update_place,
 };
 use super::handlers::poses::{
-    create_pose, delete_pose, get_pose, get_poses_by_hashtag, get_poses_by_hashtag_paginated,
-    list_poses, list_poses_paginated, update_pose_hashtags,
+    create_pose, delete_pose, get_pose, get_pose_image, get_poses_by_hashtag,
+    get_poses_by_hashtag_paginated, list_poses, list_poses_paginated, update_pose_hashtags,
 };
 use super::handlers::posts::{
     create_post, delete_post, get_post, get_posts_by_theme_of_the_day, list_posts,
@@ -100,6 +100,7 @@ pub fn create_router(state: AppState, config: &crate::config::Config) -> Router 
         .route("/api/posts/{post_id}/hashtags", post(add_hashtags_to_post))
         .route("/api/poses", get(list_poses).post(create_pose))
         .route("/api/poses/paginated", get(list_poses_paginated))
+        .route("/api/poses/{id}/image", get(get_pose_image))
         .route("/api/poses/{id}", get(get_pose).delete(delete_pose))
         .route("/api/hashtags/{hashtag_id}/poses", get(get_poses_by_hashtag))
         .route("/api/hashtags/{hashtag_id}/poses/paginated", get(get_poses_by_hashtag_paginated))

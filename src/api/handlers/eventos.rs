@@ -64,6 +64,7 @@ impl Modify for SecurityAddon {
         crate::api::handlers::poses::list_poses,
         crate::api::handlers::poses::list_poses_paginated,
         crate::api::handlers::poses::get_pose,
+        crate::api::handlers::poses::get_pose_image,
         crate::api::handlers::poses::create_pose,
         crate::api::handlers::poses::delete_pose,
         crate::api::handlers::poses::get_poses_by_hashtag,

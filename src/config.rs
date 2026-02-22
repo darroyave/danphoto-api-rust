@@ -27,6 +27,8 @@ pub struct Config {
     pub cors_allowed_origins: Vec<String>,
     /// Carpeta donde se guardan las imágenes de theme-of-the-day (POST con imagen base64).
     pub theme_of_the_day_images_dir: String,
+    /// Carpeta donde se guardan las imágenes de poses (POST con imagen base64).
+    pub poses_images_dir: String,
 }
 
 impl Config {
@@ -70,6 +72,8 @@ impl Config {
                 .unwrap_or_default(),
             theme_of_the_day_images_dir: std::env::var("THEME_OF_THE_DAY_IMAGES_DIR")
                 .unwrap_or_else(|_| "./uploads/theme-of-the-day".to_string()),
+            poses_images_dir: std::env::var("POSES_IMAGES_DIR")
+                .unwrap_or_else(|_| "./uploads/poses".to_string()),
         }
     }
 

@@ -1,9 +1,14 @@
 // Handlers de Poses (Kotlin domain/cases/poses)
 
 use axum::{
+    body::Body,
     extract::{Path, Query, State},
+    http::{header, StatusCode},
+    response::IntoResponse,
     Json,
 };
+use base64::Engine;
+use std::path::Path as StdPath;
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -21,6 +26,42 @@ use crate::application::{
 pub struct PaginationQuery {
     pub page: Option<u32>,
     pub limit: Option<u32>,
+}
+
+/// Decodifica imagen base64 (acepta prefijo data:image/xxx;base64,) y la guarda en dir/{id}.{ext}.
+/// Devuelve la URL que debe guardarse en BD: /api/poses/{id}/image.
+fn save_pose_image_base64(
+    dir: &str,
+    id: &Uuid,
+    image_base64: &str,
+) -> Result<String, ApiError> {
+    let (payload, ext) = if let Some(rest) = image_base64.strip_prefix("data:") {
+        let (mime, b64) = rest
+            .split_once(";base64,")
+            .ok_or_else(|| ApiError(crate::domain::DomainError::Validation("formato base64 inválido: se esperaba data:image/...;base64,...".to_string())))?;
+        let ext = if mime.trim().to_lowercase().starts_with("image/png") {
+            "png"
+        } else {
+            "jpg"
+        };
+        (b64.trim(), ext)
+    } else {
+        (image_base64.trim(), "jpg")
+    };
+
+    let bytes = base64::engine::general_purpose::STANDARD
+        .decode(payload)
+        .map_err(|e| ApiError(crate::domain::DomainError::Validation(format!("base64 inválido: {}", e))))?;
+    if bytes.is_empty() {
+        return Err(ApiError(crate::domain::DomainError::Validation("imagen vacía".to_string())));
+    }
+
+    std::fs::create_dir_all(dir).map_err(|e| ApiError(crate::domain::DomainError::Repository(anyhow::Error::from(e))))?;
+    let filename = format!("{}.{}", id, ext);
+    let path = StdPath::new(dir).join(&filename);
+    std::fs::write(&path, &bytes).map_err(|e| ApiError(crate::domain::DomainError::Repository(anyhow::Error::from(e))))?;
+
+    Ok(format!("/api/poses/{}/image", id))
 }
 
 /// Lista todas las poses.
@@ -93,7 +134,7 @@ pub async fn get_pose(
     Ok(Json(PoseResponse::from(item)))
 }
 
-/// Crea una pose (name opcional, url requerida).
+/// Crea una pose (name opcional, image_base64 requerida). La imagen se guarda en disco y la URL devuelta es /api/poses/{id}/image.
 #[utoipa::path(
     post,
     path = "/api/poses",
@@ -103,7 +144,7 @@ pub async fn get_pose(
     responses(
         (status = 200, description = "Pose creada", body = PoseResponse),
         (status = 401, description = "No autorizado", body = ErrorResponse),
-        (status = 400, description = "URL vacía", body = ErrorResponse),
+        (status = 400, description = "Imagen base64 vacía o inválida", body = ErrorResponse),
         (status = 500, description = "Error interno", body = ErrorResponse),
     ),
 )]
@@ -112,11 +153,57 @@ pub async fn create_pose(
     State(state): State<AppState>,
     Json(body): Json<CreatePoseRequest>,
 ) -> Result<Json<PoseResponse>, ApiError> {
+    if body.image_base64.trim().is_empty() {
+        return Err(ApiError(crate::domain::DomainError::Validation(
+            "image_base64 es requerido".to_string(),
+        )));
+    }
+    let id = Uuid::new_v4();
+    let url = save_pose_image_base64(&state.poses_images_dir, &id, &body.image_base64)?;
     let uc = CreatePoseUseCase::new(Arc::clone(&state.poses_repo));
     let item = uc
-        .execute(body.name.as_deref(), &body.url)
+        .execute_with_id(id, body.name.as_deref(), &url)
         .await?;
     Ok(Json(PoseResponse::from(item)))
+}
+
+/// Sirve la imagen de una pose (público para que el front pueda usar la url del response).
+#[utoipa::path(
+    get,
+    path = "/api/poses/{id}/image",
+    tag = "poses",
+    params(("id" = Uuid, Path, description = "UUID de la pose")),
+    responses(
+        (status = 200, description = "Imagen de la pose", content_type = "image/*"),
+        (status = 404, description = "Imagen no encontrada"),
+    ),
+)]
+pub async fn get_pose_image(
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+) -> Result<impl IntoResponse, ApiError> {
+    let dir = StdPath::new(&state.poses_images_dir);
+    for ext in ["png", "jpg", "jpeg"] {
+        let path = dir.join(format!("{}.{}", id, ext));
+        if path.exists() {
+            let bytes = std::fs::read(&path)
+                .map_err(|e| ApiError(crate::domain::DomainError::Repository(anyhow::Error::from(e))))?;
+            let content_type = if ext == "png" {
+                "image/png"
+            } else {
+                "image/jpeg"
+            };
+            return Ok((
+                StatusCode::OK,
+                [(header::CONTENT_TYPE, content_type)],
+                Body::from(bytes),
+            ));
+        }
+    }
+    Err(ApiError(crate::domain::DomainError::NotFound(format!(
+        "Imagen no encontrada para la pose {}",
+        id
+    ))))
 }
 
 /// Elimina una pose (y sus relaciones con hashtags).

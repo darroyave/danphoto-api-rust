@@ -68,6 +68,14 @@ impl CreatePoseUseCase {
         }
         self.repo.create(name, url).await
     }
+
+    /// Crea una pose con id conocido (para imágenes guardadas como {id}.{ext}).
+    pub async fn execute_with_id(&self, id: Uuid, name: Option<&str>, url: &str) -> Result<Pose, DomainError> {
+        if url.trim().is_empty() {
+            return Err(DomainError::Validation("La URL es requerida".to_string()));
+        }
+        self.repo.create_with_id(id, name, url).await
+    }
 }
 
 #[derive(Clone)]

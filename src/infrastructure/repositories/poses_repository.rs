@@ -84,6 +84,23 @@ impl PosesRepository for PosesRepositoryImpl {
         Ok(Pose::from(row))
     }
 
+    async fn create_with_id(&self, id: Uuid, name: Option<&str>, url: &str) -> Result<Pose, DomainError> {
+        let row = sqlx::query_as::<_, PoseRow>(
+            r#"
+            INSERT INTO poses (id, name, url)
+            VALUES ($1, $2, $3)
+            RETURNING id, name, url, created_at
+            "#,
+        )
+        .bind(id)
+        .bind(name)
+        .bind(url)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|e| DomainError::Repository(anyhow::Error::from(e)))?;
+        Ok(Pose::from(row))
+    }
+
     async fn delete(&self, id: Uuid) -> Result<(), DomainError> {
         sqlx::query("DELETE FROM poses WHERE id = $1")
             .bind(id)

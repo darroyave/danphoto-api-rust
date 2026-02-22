@@ -24,4 +24,6 @@ pub struct AppState {
     pub auth_repository: Arc<dyn AuthRepository>,
     /// Carpeta donde se guardan las imágenes de theme-of-the-day (desde config).
     pub theme_of_the_day_images_dir: String,
+    /// Carpeta donde se guardan las imágenes de poses (desde config).
+    pub poses_images_dir: String,
 }

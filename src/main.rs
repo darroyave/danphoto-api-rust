@@ -51,6 +51,7 @@ async fn main() -> anyhow::Result<()> {
         Arc::new(infrastructure::AuthRepositoryImpl::new(pool));
 
     std::fs::create_dir_all(&config.theme_of_the_day_images_dir).ok();
+    std::fs::create_dir_all(&config.poses_images_dir).ok();
 
     let state = api::AppState {
         eventos_repo,
@@ -66,6 +67,7 @@ async fn main() -> anyhow::Result<()> {
         jwt_secret: config.jwt_secret.clone(),
         auth_repository: auth_repo,
         theme_of_the_day_images_dir: config.theme_of_the_day_images_dir.clone(),
+        poses_images_dir: config.poses_images_dir.clone(),
     };
 
     let app: Router = api::create_router(state, &config).layer(TraceLayer::new_for_http());
