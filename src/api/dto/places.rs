@@ -12,7 +12,8 @@ pub struct CreatePlaceRequest {
     pub location: String,
     pub latitude: f64,
     pub longitude: f64,
-    pub url: String,
+    /// Imagen en base64 (acepta prefijo `data:image/xxx;base64,` o solo el payload). La URL será /api/places/{id}/image.
+    pub image_base64: String,
     pub instagram: Option<String>,
     pub website: Option<String>,
 }
@@ -25,7 +26,8 @@ pub struct UpdatePlaceRequest {
     pub location: Option<String>,
     pub latitude: Option<f64>,
     pub longitude: Option<f64>,
-    pub url: Option<String>,
+    /// Si se envía, reemplaza la imagen del lugar (base64).
+    pub image_base64: Option<String>,
     pub instagram: Option<String>,
     pub website: Option<String>,
 }

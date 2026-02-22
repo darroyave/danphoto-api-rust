@@ -54,6 +54,9 @@ async fn main() -> anyhow::Result<()> {
     std::fs::create_dir_all(&config.poses_images_dir).ok();
     std::fs::create_dir_all(&config.posts_images_dir).ok();
     std::fs::create_dir_all(&config.portfolio_images_dir).ok();
+    std::fs::create_dir_all(&config.eventos_images_dir).ok();
+    std::fs::create_dir_all(&config.places_images_dir).ok();
+    std::fs::create_dir_all(&config.profile_avatars_dir).ok();
 
     let state = api::AppState {
         eventos_repo,
@@ -72,6 +75,9 @@ async fn main() -> anyhow::Result<()> {
         poses_images_dir: config.poses_images_dir.clone(),
         posts_images_dir: config.posts_images_dir.clone(),
         portfolio_images_dir: config.portfolio_images_dir.clone(),
+        eventos_images_dir: config.eventos_images_dir.clone(),
+        places_images_dir: config.places_images_dir.clone(),
+        profile_avatars_dir: config.profile_avatars_dir.clone(),
     };
 
     let app: Router = api::create_router(state, &config).layer(TraceLayer::new_for_http());

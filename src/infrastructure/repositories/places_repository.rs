@@ -69,8 +69,9 @@ impl PlacesRepository for PlacesRepositoryImpl {
         Ok(row.map(Place::from))
     }
 
-    async fn create(
+    async fn create_with_id(
         &self,
+        id: Uuid,
         name: &str,
         description: &str,
         address: &str,
@@ -83,11 +84,12 @@ impl PlacesRepository for PlacesRepositoryImpl {
     ) -> Result<Place, DomainError> {
         let row = sqlx::query_as::<_, PlaceRow>(
             r#"
-            INSERT INTO places (name, description, address, location, latitude, longitude, url, instagram, website)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            INSERT INTO places (id, name, description, address, location, latitude, longitude, url, instagram, website)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
             RETURNING id, name, description, address, location, latitude, longitude, instagram, website, url, created_at
             "#,
         )
+        .bind(id)
         .bind(name)
         .bind(description)
         .bind(address)

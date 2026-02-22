@@ -33,6 +33,12 @@ pub struct Config {
     pub posts_images_dir: String,
     /// Carpeta donde se guardan las imágenes del portfolio (POST con imagen base64).
     pub portfolio_images_dir: String,
+    /// Carpeta donde se guardan las imágenes de eventos (POST/PUT con imagen base64).
+    pub eventos_images_dir: String,
+    /// Carpeta donde se guardan las imágenes de places (POST/PUT con imagen base64).
+    pub places_images_dir: String,
+    /// Carpeta donde se guardan los avatares de perfil (PUT /api/profile/avatar con base64).
+    pub profile_avatars_dir: String,
 }
 
 impl Config {
@@ -82,6 +88,12 @@ impl Config {
                 .unwrap_or_else(|_| "./uploads/posts".to_string()),
             portfolio_images_dir: std::env::var("PORTFOLIO_IMAGES_DIR")
                 .unwrap_or_else(|_| "./uploads/portfolio".to_string()),
+            eventos_images_dir: std::env::var("EVENTOS_IMAGES_DIR")
+                .unwrap_or_else(|_| "./uploads/eventos".to_string()),
+            places_images_dir: std::env::var("PLACES_IMAGES_DIR")
+                .unwrap_or_else(|_| "./uploads/places".to_string()),
+            profile_avatars_dir: std::env::var("PROFILE_AVATARS_DIR")
+                .unwrap_or_else(|_| "./uploads/profile-avatars".to_string()),
         }
     }
 

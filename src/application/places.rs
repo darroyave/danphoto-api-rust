@@ -44,8 +44,10 @@ impl CreatePlaceUseCase {
         Self { repo }
     }
 
-    pub async fn execute(
+    /// Crea un lugar con id conocido (imagen guardada como {id}.{ext}).
+    pub async fn execute_with_id(
         &self,
+        id: Uuid,
         name: &str,
         description: &str,
         address: &str,
@@ -57,7 +59,8 @@ impl CreatePlaceUseCase {
         website: Option<&str>,
     ) -> Result<Place, DomainError> {
         self.repo
-            .create(
+            .create_with_id(
+                id,
                 name,
                 description,
                 address,

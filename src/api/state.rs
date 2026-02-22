@@ -30,4 +30,10 @@ pub struct AppState {
     pub posts_images_dir: String,
     /// Carpeta donde se guardan las imágenes del portfolio (desde config).
     pub portfolio_images_dir: String,
+    /// Carpeta donde se guardan las imágenes de eventos (desde config).
+    pub eventos_images_dir: String,
+    /// Carpeta donde se guardan las imágenes de places (desde config).
+    pub places_images_dir: String,
+    /// Carpeta donde se guardan los avatares de perfil (desde config).
+    pub profile_avatars_dir: String,
 }

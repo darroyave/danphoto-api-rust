@@ -8,7 +8,8 @@ use uuid::Uuid;
 pub struct CreateEventoRequest {
     pub name: String,
     pub place: String,
-    pub url: String,
+    /// Imagen en base64 (acepta prefijo `data:image/xxx;base64,` o solo el payload). La URL será /api/eventos/{id}/image.
+    pub image_base64: String,
     /// Fecha en formato MMdd (ej: "1024")
     pub mmdd: String,
 }
@@ -17,7 +18,8 @@ pub struct CreateEventoRequest {
 pub struct UpdateEventoRequest {
     pub name: Option<String>,
     pub place: Option<String>,
-    pub url: Option<String>,
+    /// Si se envía, reemplaza la imagen del evento (base64).
+    pub image_base64: Option<String>,
     pub mmdd: Option<String>,
 }
 

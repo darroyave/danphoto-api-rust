@@ -57,14 +57,14 @@ impl EventosRepository for EventosRepositoryImpl {
         Ok(row.map(Evento::from))
     }
 
-    async fn create(
+    async fn create_with_id(
         &self,
+        id: Uuid,
         name: &str,
         place: &str,
         url: &str,
         mmdd: &str,
     ) -> Result<Evento, DomainError> {
-        let id = Uuid::new_v4();
         let row = sqlx::query_as::<_, EventoRow>(
             r#"
             INSERT INTO eventos (id, name, place, url, mmdd)

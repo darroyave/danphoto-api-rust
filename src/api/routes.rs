@@ -10,7 +10,7 @@ use tower_http::cors::{AllowOrigin, Any, CorsLayer};
 
 use super::auth::login;
 use super::handlers::eventos::{
-    create_evento, delete_evento, get_evento, list_eventos, update_evento,
+    create_evento, delete_evento, get_evento, get_evento_image, list_eventos, update_evento,
 };
 use super::handlers::favorites::{
     add_pose_to_favorites, get_favorite_poses, is_pose_favorite, remove_pose_from_favorites,
@@ -25,7 +25,7 @@ use super::handlers::portfolio::{
     list_portfolio_categories, update_portfolio_category,
 };
 use super::handlers::places::{
-    create_place, delete_place, get_place, list_places, update_place,
+    create_place, delete_place, get_place, get_place_image, list_places, update_place,
 };
 use super::handlers::poses::{
     create_pose, delete_pose, get_pose, get_pose_image, get_poses_by_hashtag,
@@ -45,7 +45,9 @@ use super::handlers::theme_of_the_day::{
     get_theme_of_the_day_image, get_theme_of_the_day_today, list_theme_of_the_day,
     update_theme_of_the_day,
 };
-use super::handlers::usuarios::{get_profile, update_profile, update_profile_avatar};
+use super::handlers::usuarios::{
+    get_profile, get_profile_avatar, update_profile, update_profile_avatar,
+};
 use super::state::AppState;
 use super::swagger::{
     serve_index_css, serve_openapi_json, serve_swagger_initializer_js, serve_swagger_ui,
@@ -75,6 +77,7 @@ pub fn create_router(state: AppState, config: &crate::config::Config) -> Router 
     let cors = cors_layer_from_config(config);
     let rest_routes = Router::new()
         .route("/api/eventos", get(list_eventos).post(create_evento))
+        .route("/api/eventos/{id}/image", get(get_evento_image))
         .route(
             "/api/eventos/{id}",
             get(get_evento).put(update_evento).delete(delete_evento),
@@ -117,6 +120,7 @@ pub fn create_router(state: AppState, config: &crate::config::Config) -> Router 
         .route("/api/favorites/poses", get(get_favorite_poses))
         .route("/api/favorites/poses/{pose_id}", get(is_pose_favorite).post(add_pose_to_favorites).delete(remove_pose_from_favorites))
         .route("/api/places", get(list_places).post(create_place))
+        .route("/api/places/{id}/image", get(get_place_image))
         .route("/api/places/{id}", get(get_place).put(update_place).delete(delete_place))
         .route("/api/sesiones", get(list_sesiones).post(create_sesion))
         .route("/api/sesiones/from-favorites", post(create_sesion_from_favorites))
@@ -126,7 +130,7 @@ pub fn create_router(state: AppState, config: &crate::config::Config) -> Router 
         .route("/api/sesiones/{id}/poses/{pose_id}", delete(remove_pose_from_sesion))
         .route("/api/sesiones/{id}/cover", put(update_sesion_cover))
         .route("/api/profile", get(get_profile).put(update_profile))
-        .route("/api/profile/avatar", put(update_profile_avatar))
+        .route("/api/profile/avatar", get(get_profile_avatar).put(update_profile_avatar))
         .route("/api/health", get(|| async { "ok" }))
         .route("/api-docs/openapi.json", get(serve_openapi_json))
         .route("/swagger-ui", get(serve_swagger_ui_root))

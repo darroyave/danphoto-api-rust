@@ -11,8 +11,10 @@ use super::error::DomainError;
 pub trait PlacesRepository: Send + Sync {
     async fn get_all(&self) -> Result<Vec<Place>, DomainError>;
     async fn get_by_id(&self, id: Uuid) -> Result<Option<Place>, DomainError>;
-    async fn create(
+    /// Crea un lugar con id conocido (para guardar la imagen como {id}.{ext}).
+    async fn create_with_id(
         &self,
+        id: Uuid,
         name: &str,
         description: &str,
         address: &str,

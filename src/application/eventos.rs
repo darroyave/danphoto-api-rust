@@ -47,8 +47,10 @@ impl CreateEventoUseCase {
         Self { repo }
     }
 
-    pub async fn execute(
+    /// Crea un evento con id conocido (imagen guardada como {id}.{ext}).
+    pub async fn execute_with_id(
         &self,
+        id: Uuid,
         name: &str,
         place: &str,
         url: &str,
@@ -59,7 +61,7 @@ impl CreateEventoUseCase {
                 "El campo fecha (MMdd) es requerido".to_string(),
             ));
         }
-        self.repo.create(name, place, url, mmdd).await
+        self.repo.create_with_id(id, name, place, url, mmdd).await
     }
 }
 
