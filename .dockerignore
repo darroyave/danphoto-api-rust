@@ -1,0 +1,19 @@
+# Build
+/target
+**/*.rs.bk
+# No incluir .env en la imagen
+.env
+.env.*
+!.env.example
+# Git y documentación (opcional, reduce contexto)
+.git
+.gitignore
+docs/
+*.md
+!README.md
+# IDE
+.idea
+.vscode
+*.swp
+# Uploads locales (en producción se montan o usan volumen)
+/uploads
