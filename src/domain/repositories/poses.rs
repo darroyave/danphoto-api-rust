@@ -11,6 +11,8 @@ use super::error::DomainError;
 pub trait PosesRepository: Send + Sync {
     async fn get_all(&self) -> Result<Vec<Pose>, DomainError>;
     async fn get_paginated(&self, page: u32, limit: u32) -> Result<Vec<Pose>, DomainError>;
+    /// Total de poses (para paginación).
+    async fn count(&self) -> Result<u64, DomainError>;
     async fn get_by_id(&self, id: Uuid) -> Result<Option<Pose>, DomainError>;
     /// Crea una pose con id conocido (para guardar la imagen con ese id como nombre de archivo).
     async fn create_with_id(&self, id: Uuid, url: &str) -> Result<Pose, DomainError>;

@@ -25,12 +25,27 @@ pub struct AddPortfolioImageRequest {
     pub image_base64: String,
 }
 
+/// Respuesta de una imagen del portfolio.
 #[derive(Debug, Serialize, ToSchema)]
 pub struct PortfolioImageResponse {
     pub id: Uuid,
     pub portfolio_category_id: Uuid,
     pub url: String,
     pub created_at: Option<chrono::DateTime<chrono::Utc>>,
+}
+
+/// Respuesta paginada de imágenes de una categoría del portfolio (GET /api/portfolio/categories/{category_id}/images).
+#[derive(Debug, Serialize, ToSchema)]
+pub struct PortfolioImagesPaginatedResponse {
+    pub items: Vec<PortfolioImageResponse>,
+    /// Total de imágenes en la categoría.
+    pub count: u64,
+    /// Página actual (0-based).
+    pub page: u32,
+    /// Tamaño de página usado.
+    pub limit: u32,
+    /// Total de páginas.
+    pub total_pages: u32,
 }
 
 impl From<crate::domain::PortfolioCategory> for PortfolioCategoryResponse {

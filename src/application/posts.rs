@@ -29,8 +29,10 @@ impl GetPostsPaginatedUseCase {
         Self { repo }
     }
 
-    pub async fn execute(&self, page: u32, limit: u32) -> Result<Vec<Post>, DomainError> {
-        self.repo.get_paginated(page, limit).await
+    pub async fn execute(&self, page: u32, limit: u32) -> Result<(Vec<Post>, u64), DomainError> {
+        let items = self.repo.get_paginated(page, limit).await?;
+        let total = self.repo.count().await?;
+        Ok((items, total))
     }
 }
 

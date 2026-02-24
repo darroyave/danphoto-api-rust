@@ -11,6 +11,8 @@ use super::error::DomainError;
 pub trait PostsRepository: Send + Sync {
     async fn get_all(&self) -> Result<Vec<Post>, DomainError>;
     async fn get_paginated(&self, page: u32, limit: u32) -> Result<Vec<Post>, DomainError>;
+    /// Total de posts (para paginación).
+    async fn count(&self) -> Result<u64, DomainError>;
     async fn get_by_theme_of_the_day_id(
         &self,
         theme_of_the_day_id: &str,

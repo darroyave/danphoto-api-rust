@@ -216,4 +216,19 @@ impl HashtagsRepository for HashtagsRepositoryImpl {
         .map_err(|e| DomainError::Repository(anyhow::Error::from(e)))?;
         Ok(rows.into_iter().map(Pose::from).collect())
     }
+
+    async fn count_poses_by_hashtag(&self, hashtag_id: Uuid) -> Result<u64, DomainError> {
+        let row: (i64,) = sqlx::query_as(
+            r#"
+            SELECT COUNT(*) FROM poses p
+            INNER JOIN hashtag_image hi ON hi.pose_id = p.id
+            WHERE hi.hashtag_id = $1
+            "#,
+        )
+        .bind(hashtag_id)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|e| DomainError::Repository(anyhow::Error::from(e)))?;
+        Ok(row.0 as u64)
+    }
 }

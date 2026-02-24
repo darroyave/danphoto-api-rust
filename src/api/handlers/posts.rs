@@ -13,7 +13,7 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::api::{
-    dto::{CreatePostRequest, ErrorResponse, PostResponse},
+    dto::{CreatePostRequest, ErrorResponse, PostResponse, PostsPaginatedResponse},
     state::AppState,
     ApiError,
 };
@@ -84,7 +84,7 @@ pub async fn list_posts(
     Ok(Json(items.into_iter().map(PostResponse::from).collect()))
 }
 
-/// Lista posts paginado (?page=0&limit=20).
+/// Lista posts paginado (?page=0&limit=20). Devuelve items, count, page, limit y total_pages.
 #[utoipa::path(
     get,
     path = "/api/posts/paginated",
@@ -92,7 +92,7 @@ pub async fn list_posts(
     security(("bearer_auth" = [])),
     params(PaginationQuery),
     responses(
-        (status = 200, description = "Lista de posts", body = [PostResponse]),
+        (status = 200, description = "Lista paginada de posts (items, count, page, limit, total_pages)", body = PostsPaginatedResponse),
         (status = 401, description = "No autorizado", body = ErrorResponse),
         (status = 500, description = "Error interno", body = ErrorResponse),
     ),
@@ -101,12 +101,23 @@ pub async fn list_posts_paginated(
     _auth: crate::api::auth::BearerAuth,
     State(state): State<AppState>,
     Query(q): Query<PaginationQuery>,
-) -> Result<Json<Vec<PostResponse>>, ApiError> {
+) -> Result<Json<PostsPaginatedResponse>, ApiError> {
     let page = q.page.unwrap_or(0);
     let limit = q.limit.unwrap_or(20).min(100);
     let uc = GetPostsPaginatedUseCase::new(Arc::clone(&state.posts_repo));
-    let items = uc.execute(page, limit).await?;
-    Ok(Json(items.into_iter().map(PostResponse::from).collect()))
+    let (items, count) = uc.execute(page, limit).await?;
+    let total_pages = if count == 0 {
+        0
+    } else {
+        ((count as u32) + limit - 1) / limit
+    };
+    Ok(Json(PostsPaginatedResponse {
+        items: items.into_iter().map(PostResponse::from).collect(),
+        count,
+        page,
+        limit,
+        total_pages,
+    }))
 }
 
 /// Posts por tema del día (MMdd).

@@ -82,6 +82,17 @@ impl PortfolioRepository for PortfolioRepositoryImpl {
         Ok(rows.into_iter().map(PortfolioImage::from).collect())
     }
 
+    async fn count_images_by_category(&self, category_id: Uuid) -> Result<u64, DomainError> {
+        let row: (i64,) = sqlx::query_as(
+            "SELECT COUNT(*) FROM portfolio_image WHERE portfolio_category_id = $1",
+        )
+        .bind(category_id)
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|e| DomainError::Repository(anyhow::Error::from(e)))?;
+        Ok(row.0 as u64)
+    }
+
     async fn create_category(&self, name: &str) -> Result<PortfolioCategory, DomainError> {
         let row = sqlx::query_as::<_, PortfolioCategoryRow>(
             r#"

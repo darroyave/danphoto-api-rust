@@ -16,6 +16,8 @@ pub trait PortfolioRepository: Send + Sync {
         page: u32,
         limit: u32,
     ) -> Result<Vec<PortfolioImage>, DomainError>;
+    /// Total de imágenes en la categoría (para paginación).
+    async fn count_images_by_category(&self, category_id: Uuid) -> Result<u64, DomainError>;
     async fn create_category(&self, name: &str) -> Result<PortfolioCategory, DomainError>;
     async fn update_category(&self, id: Uuid, name: &str) -> Result<Option<PortfolioCategory>, DomainError>;
     async fn delete_category(&self, id: Uuid) -> Result<(), DomainError>;

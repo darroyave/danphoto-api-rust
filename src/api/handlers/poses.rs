@@ -13,7 +13,10 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::api::{
-    dto::{CreatePoseRequest, ErrorResponse, PoseResponse, UpdatePoseHashtagsRequest},
+    dto::{
+        CreatePoseRequest, ErrorResponse, PoseResponse, PosesPaginatedResponse,
+        UpdatePoseHashtagsRequest,
+    },
     state::AppState,
     ApiError,
 };
@@ -85,7 +88,7 @@ pub async fn list_poses(
     Ok(Json(items.into_iter().map(PoseResponse::from).collect()))
 }
 
-/// Lista poses paginado (?page=0&limit=20).
+/// Lista poses paginado (?page=0&limit=20). Devuelve items, count, page, limit y total_pages.
 #[utoipa::path(
     get,
     path = "/api/poses/paginated",
@@ -93,7 +96,7 @@ pub async fn list_poses(
     security(("bearer_auth" = [])),
     params(PaginationQuery),
     responses(
-        (status = 200, description = "Lista de poses", body = [PoseResponse]),
+        (status = 200, description = "Lista paginada de poses (items, count, page, limit, total_pages)", body = PosesPaginatedResponse),
         (status = 401, description = "No autorizado", body = ErrorResponse),
         (status = 500, description = "Error interno", body = ErrorResponse),
     ),
@@ -102,12 +105,23 @@ pub async fn list_poses_paginated(
     _auth: crate::api::auth::BearerAuth,
     State(state): State<AppState>,
     Query(q): Query<PaginationQuery>,
-) -> Result<Json<Vec<PoseResponse>>, ApiError> {
+) -> Result<Json<PosesPaginatedResponse>, ApiError> {
     let page = q.page.unwrap_or(0);
     let limit = q.limit.unwrap_or(20).min(100);
     let uc = GetPosesPaginatedUseCase::new(Arc::clone(&state.poses_repo));
-    let items = uc.execute(page, limit).await?;
-    Ok(Json(items.into_iter().map(PoseResponse::from).collect()))
+    let (items, count) = uc.execute(page, limit).await?;
+    let total_pages = if count == 0 {
+        0
+    } else {
+        ((count as u32) + limit - 1) / limit
+    };
+    Ok(Json(PosesPaginatedResponse {
+        items: items.into_iter().map(PoseResponse::from).collect(),
+        count,
+        page,
+        limit,
+        total_pages,
+    }))
 }
 
 /// Obtiene una pose por id.
@@ -265,7 +279,7 @@ pub async fn get_poses_by_hashtag(
     Ok(Json(items.into_iter().map(PoseResponse::from).collect()))
 }
 
-/// Poses etiquetadas con un hashtag (paginado).
+/// Poses etiquetadas con un hashtag (paginado). Devuelve items, count, page, limit y total_pages.
 #[utoipa::path(
     get,
     path = "/api/hashtags/{hashtag_id}/poses/paginated",
@@ -273,7 +287,7 @@ pub async fn get_poses_by_hashtag(
     security(("bearer_auth" = [])),
     params(("hashtag_id" = Uuid, Path), PaginationQuery),
     responses(
-        (status = 200, description = "Lista de poses", body = [PoseResponse]),
+        (status = 200, description = "Lista paginada de poses (items, count, page, limit, total_pages)", body = PosesPaginatedResponse),
         (status = 401, description = "No autorizado", body = ErrorResponse),
         (status = 500, description = "Error interno", body = ErrorResponse),
     ),
@@ -283,12 +297,23 @@ pub async fn get_poses_by_hashtag_paginated(
     State(state): State<AppState>,
     Path(hashtag_id): Path<Uuid>,
     Query(q): Query<PaginationQuery>,
-) -> Result<Json<Vec<PoseResponse>>, ApiError> {
+) -> Result<Json<PosesPaginatedResponse>, ApiError> {
     let page = q.page.unwrap_or(0);
     let limit = q.limit.unwrap_or(20).min(100);
     let uc = GetPosesByHashtagPaginatedUseCase::new(Arc::clone(&state.hashtags_repo));
-    let items = uc.execute(hashtag_id, page, limit).await?;
-    Ok(Json(items.into_iter().map(PoseResponse::from).collect()))
+    let (items, count) = uc.execute(hashtag_id, page, limit).await?;
+    let total_pages = if count == 0 {
+        0
+    } else {
+        ((count as u32) + limit - 1) / limit
+    };
+    Ok(Json(PosesPaginatedResponse {
+        items: items.into_iter().map(PoseResponse::from).collect(),
+        count,
+        page,
+        limit,
+        total_pages,
+    }))
 }
 
 /// Actualiza los hashtags de una pose (reemplaza la lista).

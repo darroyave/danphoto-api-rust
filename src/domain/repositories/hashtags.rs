@@ -40,4 +40,6 @@ pub trait HashtagsRepository: Send + Sync {
         page: u32,
         limit: u32,
     ) -> Result<Vec<Pose>, DomainError>;
+    /// Total de poses etiquetadas con el hashtag (para paginación).
+    async fn count_poses_by_hashtag(&self, hashtag_id: Uuid) -> Result<u64, DomainError>;
 }

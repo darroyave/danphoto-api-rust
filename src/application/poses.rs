@@ -29,8 +29,10 @@ impl GetPosesPaginatedUseCase {
         Self { repo }
     }
 
-    pub async fn execute(&self, page: u32, limit: u32) -> Result<Vec<Pose>, DomainError> {
-        self.repo.get_paginated(page, limit).await
+    pub async fn execute(&self, page: u32, limit: u32) -> Result<(Vec<Pose>, u64), DomainError> {
+        let items = self.repo.get_paginated(page, limit).await?;
+        let total = self.repo.count().await?;
+        Ok((items, total))
     }
 }
 
@@ -124,10 +126,13 @@ impl GetPosesByHashtagPaginatedUseCase {
         hashtag_id: Uuid,
         page: u32,
         limit: u32,
-    ) -> Result<Vec<Pose>, DomainError> {
-        self.repo
+    ) -> Result<(Vec<Pose>, u64), DomainError> {
+        let items = self
+            .repo
             .get_poses_by_hashtag_paginated(hashtag_id, page, limit)
-            .await
+            .await?;
+        let total = self.repo.count_poses_by_hashtag(hashtag_id).await?;
+        Ok((items, total))
     }
 }
 

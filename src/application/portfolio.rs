@@ -36,8 +36,10 @@ impl GetPortfolioImagesByCategoryUseCase {
         category_id: Uuid,
         page: u32,
         limit: u32,
-    ) -> Result<Vec<PortfolioImage>, DomainError> {
-        self.repo.get_images_by_category(category_id, page, limit).await
+    ) -> Result<(Vec<PortfolioImage>, u64), DomainError> {
+        let items = self.repo.get_images_by_category(category_id, page, limit).await?;
+        let total = self.repo.count_images_by_category(category_id).await?;
+        Ok((items, total))
     }
 }
 

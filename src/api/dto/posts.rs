@@ -19,6 +19,16 @@ pub struct PostResponse {
     pub created_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
+/// Respuesta paginada de posts (GET /api/posts/paginated).
+#[derive(Debug, Serialize, ToSchema)]
+pub struct PostsPaginatedResponse {
+    pub items: Vec<PostResponse>,
+    pub count: u64,
+    pub page: u32,
+    pub limit: u32,
+    pub total_pages: u32,
+}
+
 impl From<crate::domain::Post> for PostResponse {
     fn from(p: crate::domain::Post) -> Self {
         PostResponse {

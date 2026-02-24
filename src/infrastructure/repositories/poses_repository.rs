@@ -55,6 +55,14 @@ impl PosesRepository for PosesRepositoryImpl {
         Ok(rows.into_iter().map(Pose::from).collect())
     }
 
+    async fn count(&self) -> Result<u64, DomainError> {
+        let row: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM poses")
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| DomainError::Repository(anyhow::Error::from(e)))?;
+        Ok(row.0 as u64)
+    }
+
     async fn get_by_id(&self, id: Uuid) -> Result<Option<Pose>, DomainError> {
         let row = sqlx::query_as::<_, PoseRow>(
             "SELECT id, url, created_at FROM poses WHERE id = $1",

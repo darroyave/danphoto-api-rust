@@ -15,7 +15,8 @@ use uuid::Uuid;
 use crate::api::{
     dto::{
         AddPortfolioImageRequest, CreatePortfolioCategoryRequest,
-        PortfolioCategoryResponse, PortfolioImageResponse, UpdatePortfolioCategoryRequest,
+        PortfolioCategoryResponse, PortfolioImageResponse, PortfolioImagesPaginatedResponse,
+        UpdatePortfolioCategoryRequest,
     },
     state::AppState,
     ApiError,
@@ -28,7 +29,9 @@ use crate::application::{
 
 #[derive(Debug, serde::Deserialize, utoipa::IntoParams)]
 pub struct PaginationQuery {
+    /// Página (0-based). Por defecto 0.
     pub page: Option<u32>,
+    /// Tamaño de página (máx. 100). Por defecto 20.
     pub limit: Option<u32>,
 }
 
@@ -88,15 +91,18 @@ pub async fn list_portfolio_categories(
     Ok(Json(items.into_iter().map(PortfolioCategoryResponse::from).collect()))
 }
 
-/// Imágenes de una categoría (paginado).
+/// Imágenes de una categoría del portfolio (paginado). Query: ?page=0&limit=20. Devuelve items, count, page, limit y total_pages.
 #[utoipa::path(
     get,
     path = "/api/portfolio/categories/{category_id}/images",
     tag = "portfolio",
     security(("bearer_auth" = [])),
-    params(("category_id" = Uuid, Path), PaginationQuery),
+    params(
+        ("category_id" = Uuid, Path, description = "UUID de la categoría"),
+        PaginationQuery
+    ),
     responses(
-        (status = 200, description = "Lista de imágenes", body = [PortfolioImageResponse]),
+        (status = 200, description = "Lista paginada de imágenes (items, count, page, limit, total_pages)", body = PortfolioImagesPaginatedResponse),
         (status = 401, description = "No autorizado", body = crate::api::dto::ErrorResponse),
         (status = 500, description = "Error interno", body = crate::api::dto::ErrorResponse),
     ),
@@ -106,12 +112,23 @@ pub async fn get_portfolio_images(
     State(state): State<AppState>,
     Path(category_id): Path<Uuid>,
     Query(q): Query<PaginationQuery>,
-) -> Result<Json<Vec<PortfolioImageResponse>>, ApiError> {
+) -> Result<Json<PortfolioImagesPaginatedResponse>, ApiError> {
     let page = q.page.unwrap_or(0);
     let limit = q.limit.unwrap_or(20).min(100);
     let uc = GetPortfolioImagesByCategoryUseCase::new(Arc::clone(&state.portfolio_repo));
-    let items = uc.execute(category_id, page, limit).await?;
-    Ok(Json(items.into_iter().map(PortfolioImageResponse::from).collect()))
+    let (items, count) = uc.execute(category_id, page, limit).await?;
+    let total_pages = if count == 0 {
+        0
+    } else {
+        ((count as u32) + limit - 1) / limit
+    };
+    Ok(Json(PortfolioImagesPaginatedResponse {
+        items: items.into_iter().map(PortfolioImageResponse::from).collect(),
+        count,
+        page,
+        limit,
+        total_pages,
+    }))
 }
 
 /// Crea una categoría del portfolio.

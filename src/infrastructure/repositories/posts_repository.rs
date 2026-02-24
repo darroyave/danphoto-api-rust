@@ -61,6 +61,14 @@ impl PostsRepository for PostsRepositoryImpl {
         Ok(rows.into_iter().map(Post::from).collect())
     }
 
+    async fn count(&self) -> Result<u64, DomainError> {
+        let row: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM posts")
+            .fetch_one(&self.pool)
+            .await
+            .map_err(|e| DomainError::Repository(anyhow::Error::from(e)))?;
+        Ok(row.0 as u64)
+    }
+
     async fn get_by_theme_of_the_day_id(
         &self,
         theme_of_the_day_id: &str,

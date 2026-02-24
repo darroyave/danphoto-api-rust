@@ -18,6 +18,16 @@ pub struct PoseResponse {
     pub created_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
+/// Respuesta paginada de poses (GET /api/poses/paginated y GET /api/hashtags/{hashtag_id}/poses/paginated).
+#[derive(Debug, Serialize, ToSchema)]
+pub struct PosesPaginatedResponse {
+    pub items: Vec<PoseResponse>,
+    pub count: u64,
+    pub page: u32,
+    pub limit: u32,
+    pub total_pages: u32,
+}
+
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct UpdatePoseHashtagsRequest {
     pub hashtag_ids: Vec<Uuid>,
