@@ -231,10 +231,23 @@ pub async fn add_portfolio_image(
         )));
     }
     let id = Uuid::new_v4();
-    let url = save_portfolio_image_base64(&state.portfolio_images_dir, &id, &body.image_base64)?;
+    let dir = &state.portfolio_images_dir;
+    let url = match save_portfolio_image_base64(dir, &id, &body.image_base64) {
+        Ok(u) => u,
+        Err(e) => return Err(e),
+    };
     let uc = AddPortfolioImageUseCase::new(Arc::clone(&state.portfolio_repo));
-    let item = uc.execute_with_id(id, category_id, &url).await?;
-    Ok(Json(PortfolioImageResponse::from(item)))
+    match uc.execute_with_id(id, category_id, &url).await {
+        Ok(item) => Ok(Json(PortfolioImageResponse::from(item))),
+        Err(e) => {
+            // Borrar el archivo recién guardado si el INSERT falla (evitar huérfanos)
+            for ext in ["png", "jpg", "jpeg"] {
+                let path = StdPath::new(dir).join(format!("{}.{}", id, ext));
+                let _ = std::fs::remove_file(&path);
+            }
+            Err(ApiError(e))
+        }
+    }
 }
 
 /// Sirve la imagen de un ítem del portfolio (público).

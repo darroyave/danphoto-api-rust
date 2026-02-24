@@ -33,7 +33,8 @@ impl FavoritesRepositoryImpl {
 #[async_trait]
 impl FavoritesRepository for FavoritesRepositoryImpl {
     async fn is_pose_favorite(&self, user_id: Uuid, pose_id: Uuid) -> Result<bool, DomainError> {
-        let row: Option<(i64,)> = sqlx::query_as(
+        // PostgreSQL INTEGER → i32; comprobar existencia en tabla favoritos (user_id, pose_id).
+        let row: Option<(i32,)> = sqlx::query_as(
             "SELECT 1 FROM favoritos WHERE user_id = $1 AND pose_id = $2 LIMIT 1",
         )
         .bind(user_id)

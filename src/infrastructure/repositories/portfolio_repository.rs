@@ -154,7 +154,13 @@ impl PortfolioRepository for PortfolioRepositoryImpl {
         .bind(url)
         .fetch_one(&self.pool)
         .await
-        .map_err(|e| DomainError::Repository(anyhow::Error::from(e)))?;
+        .map_err(|e| {
+            let msg = format!(
+                "portfolio_image INSERT falló: {} (comprueba que la tabla exista con columnas id UUID, portfolio_category_id UUID, url TEXT, created_at TIMESTAMPTZ DEFAULT now())",
+                e
+            );
+            DomainError::Repository(anyhow::Error::msg(msg))
+        })?;
         Ok(PortfolioImage::from(row))
     }
 
