@@ -8,7 +8,7 @@ use axum::{
     Json,
 };
 use base64::Engine;
-use std::path::Path as StdPath;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -28,7 +28,19 @@ pub struct PaginationQuery {
     pub limit: Option<u32>,
 }
 
+/// Resuelve el directorio de imágenes: si es relativo, lo hace absoluto respecto al CWD actual.
+fn resolve_posts_dir(dir: &str) -> PathBuf {
+    let p = Path::new(dir);
+    if p.is_absolute() {
+        return p.to_path_buf();
+    }
+    std::env::current_dir()
+        .unwrap_or_else(|_| PathBuf::from("."))
+        .join(p)
+}
+
 /// Decodifica imagen base64 y la guarda en dir/{id}.{ext}. Devuelve la URL: /api/posts/{id}/image.
+/// El directorio se resuelve (rutas relativas como "app/uploads/posts" se hacen absolutas respecto al CWD).
 fn save_post_image_base64(
     dir: &str,
     id: &Uuid,
@@ -55,10 +67,12 @@ fn save_post_image_base64(
         return Err(ApiError(crate::domain::DomainError::Validation("imagen vacía".to_string())));
     }
 
-    std::fs::create_dir_all(dir).map_err(|e| ApiError(crate::domain::DomainError::Repository(anyhow::Error::from(e))))?;
-    let filename = format!("{}.{}", id, ext);
-    let path = StdPath::new(dir).join(&filename);
-    std::fs::write(&path, &bytes).map_err(|e| ApiError(crate::domain::DomainError::Repository(anyhow::Error::from(e))))?;
+    let base_dir = resolve_posts_dir(dir);
+    let file_path = base_dir.join(format!("{}.{}", id, ext));
+    if let Some(parent) = file_path.parent() {
+        std::fs::create_dir_all(parent).map_err(|e| ApiError(crate::domain::DomainError::Repository(anyhow::Error::from(e))))?;
+    }
+    std::fs::write(&file_path, &bytes).map_err(|e| ApiError(crate::domain::DomainError::Repository(anyhow::Error::from(e))))?;
 
     Ok(format!("/api/posts/{}/image", id))
 }
@@ -232,7 +246,8 @@ pub async fn get_post_image(
     State(state): State<AppState>,
     Path(id): Path<Uuid>,
 ) -> Result<impl IntoResponse, ApiError> {
-    let dir = StdPath::new(&state.posts_images_dir);
+    let dir = resolve_posts_dir(&state.posts_images_dir);
+    let dir = dir.canonicalize().unwrap_or_else(|_| dir);
     for ext in ["png", "jpg", "jpeg"] {
         let path = dir.join(format!("{}.{}", id, ext));
         if path.exists() {
@@ -245,14 +260,18 @@ pub async fn get_post_image(
             };
             return Ok((
                 StatusCode::OK,
-                [(header::CONTENT_TYPE, content_type)],
+                [
+                    (header::CONTENT_TYPE, content_type),
+                    (header::CACHE_CONTROL, "public, max-age=86400"),
+                ],
                 Body::from(bytes),
             ));
         }
     }
     Err(ApiError(crate::domain::DomainError::NotFound(format!(
-        "Imagen no encontrada para el post {}",
-        id
+        "Imagen no encontrada para el post {} (directorio: {})",
+        id,
+        dir.display()
     ))))
 }
 
