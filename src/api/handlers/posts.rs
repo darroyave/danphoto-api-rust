@@ -8,7 +8,7 @@ use axum::{
     Json,
 };
 use base64::Engine;
-use std::path::{Path, PathBuf};
+use std::path::{Path as StdPath, PathBuf};
 use std::sync::Arc;
 use uuid::Uuid;
 
@@ -30,7 +30,7 @@ pub struct PaginationQuery {
 
 /// Resuelve el directorio de imágenes: si es relativo, lo hace absoluto respecto al CWD actual.
 fn resolve_posts_dir(dir: &str) -> PathBuf {
-    let p = Path::new(dir);
+    let p = StdPath::new(dir);
     if p.is_absolute() {
         return p.to_path_buf();
     }
