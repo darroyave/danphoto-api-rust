@@ -86,8 +86,11 @@ impl CreatePostUseCase {
         description: Option<&str>,
         url: Option<&str>,
         user_id: Option<Uuid>,
+        theme_of_the_day_id: &str,
     ) -> Result<Post, DomainError> {
-        self.repo.create_with_id(id, description, url, user_id).await
+        self.repo
+            .create_with_id(id, description, url, user_id, theme_of_the_day_id)
+            .await
     }
 }
 

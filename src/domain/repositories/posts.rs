@@ -25,6 +25,7 @@ pub trait PostsRepository: Send + Sync {
         description: Option<&str>,
         url: Option<&str>,
         user_id: Option<Uuid>,
+        theme_of_the_day_id: &str,
     ) -> Result<Post, DomainError>;
     async fn delete(&self, id: Uuid) -> Result<(), DomainError>;
 }

@@ -100,11 +100,12 @@ impl PostsRepository for PostsRepositoryImpl {
         description: Option<&str>,
         url: Option<&str>,
         user_id: Option<Uuid>,
+        theme_of_the_day_id: &str,
     ) -> Result<Post, DomainError> {
         let row = sqlx::query_as::<_, PostRow>(
             r#"
-            INSERT INTO posts (id, description, url, user_id)
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO posts (id, description, url, user_id, theme_of_the_day_id)
+            VALUES ($1, $2, $3, $4, $5)
             RETURNING id, description, url, user_id, theme_of_the_day_id, created_at
             "#,
         )
@@ -112,6 +113,7 @@ impl PostsRepository for PostsRepositoryImpl {
         .bind(description)
         .bind(url)
         .bind(user_id)
+        .bind(theme_of_the_day_id)
         .fetch_one(&self.pool)
         .await
         .map_err(|e| DomainError::Repository(anyhow::Error::from(e)))?;

@@ -7,6 +7,8 @@ pub struct CreatePostRequest {
     pub description: Option<String>,
     /// Imagen en base64 (acepta prefijo `data:image/xxx;base64,` o solo el payload). Si se envía, la URL del post será /api/posts/{id}/image.
     pub image_base64: String,
+    /// Id del tema del día (ej. MMdd). Requerido.
+    pub theme_of_the_day_id: String,
 }
 
 #[derive(Debug, Serialize, ToSchema)]

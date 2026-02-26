@@ -191,6 +191,11 @@ pub async fn create_post(
             "image_base64 es requerido".to_string(),
         )));
     }
+    if body.theme_of_the_day_id.trim().is_empty() {
+        return Err(ApiError(crate::domain::DomainError::Validation(
+            "theme_of_the_day_id es requerido".to_string(),
+        )));
+    }
     let user = state
         .auth_repository
         .get_by_email(&auth.0)
@@ -201,7 +206,13 @@ pub async fn create_post(
     let url = save_post_image_base64(&state.posts_images_dir, &id, &body.image_base64)?;
     let uc = CreatePostUseCase::new(Arc::clone(&state.posts_repo));
     let item = uc
-        .execute_with_id(id, body.description.as_deref(), Some(&url), user_id)
+        .execute_with_id(
+            id,
+            body.description.as_deref(),
+            Some(&url),
+            user_id,
+            body.theme_of_the_day_id.trim(),
+        )
         .await?;
     Ok(Json(PostResponse::from(item)))
 }
