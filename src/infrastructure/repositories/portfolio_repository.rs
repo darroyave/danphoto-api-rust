@@ -127,6 +127,25 @@ impl PortfolioRepository for PortfolioRepositoryImpl {
         Ok(row.map(PortfolioCategory::from))
     }
 
+    async fn update_category_cover(
+        &self,
+        id: Uuid,
+        cover_url: &str,
+    ) -> Result<Option<PortfolioCategory>, DomainError> {
+        let row = sqlx::query_as::<_, PortfolioCategoryRow>(
+            r#"
+            UPDATE portfolio_category SET cover_url = $2 WHERE id = $1
+            RETURNING id, name, cover_url
+            "#,
+        )
+        .bind(id)
+        .bind(cover_url)
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(|e| DomainError::Repository(anyhow::Error::from(e)))?;
+        Ok(row.map(PortfolioCategory::from))
+    }
+
     async fn delete_category(&self, id: Uuid) -> Result<(), DomainError> {
         sqlx::query("DELETE FROM portfolio_category WHERE id = $1")
             .bind(id)

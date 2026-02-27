@@ -12,6 +12,11 @@ pub struct UpdatePortfolioCategoryRequest {
     pub name: String,
 }
 
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct UpdatePortfolioCoverRequest {
+    pub cover_url: String,
+}
+
 #[derive(Debug, Serialize, ToSchema)]
 pub struct PortfolioCategoryResponse {
     pub id: Uuid,

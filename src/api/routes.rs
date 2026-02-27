@@ -22,7 +22,7 @@ use super::handlers::hashtags::{
 use super::handlers::portfolio::{
     add_portfolio_image, create_portfolio_category, delete_portfolio_category,
     delete_portfolio_image, get_portfolio_image, get_portfolio_images,
-    list_portfolio_categories, update_portfolio_category,
+    list_portfolio_categories, update_portfolio_category, update_portfolio_cover,
 };
 use super::handlers::places::{
     create_place, delete_place, get_place, get_place_image, list_places, update_place,
@@ -113,6 +113,7 @@ pub fn create_router(state: AppState, config: &crate::config::Config) -> Router 
         .route("/api/posts/{id}/image", get(get_post_image))
         .route("/api/posts/{id}", get(get_post).delete(delete_post))
         .route("/api/portfolio/categories", get(list_portfolio_categories).post(create_portfolio_category))
+        .route("/api/portfolio/{id}/cover", put(update_portfolio_cover))
         .route("/api/portfolio/categories/{id}", put(update_portfolio_category).delete(delete_portfolio_category))
         .route("/api/portfolio/categories/{category_id}/images", get(get_portfolio_images).post(add_portfolio_image))
         .route("/api/portfolio/images/{id}/image", get(get_portfolio_image))

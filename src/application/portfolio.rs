@@ -80,6 +80,24 @@ impl UpdatePortfolioCategoryUseCase {
 }
 
 #[derive(Clone)]
+pub struct UpdatePortfolioCoverUseCase {
+    repo: Arc<dyn PortfolioRepository>,
+}
+
+impl UpdatePortfolioCoverUseCase {
+    pub fn new(repo: Arc<dyn PortfolioRepository>) -> Self {
+        Self { repo }
+    }
+
+    pub async fn execute(&self, id: Uuid, cover_url: &str) -> Result<PortfolioCategory, DomainError> {
+        self.repo
+            .update_category_cover(id, cover_url)
+            .await?
+            .ok_or_else(|| DomainError::NotFound(format!("Categoría no encontrada: {}", id)))
+    }
+}
+
+#[derive(Clone)]
 pub struct DeletePortfolioCategoryUseCase {
     repo: Arc<dyn PortfolioRepository>,
 }

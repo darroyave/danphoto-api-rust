@@ -16,7 +16,7 @@ use crate::api::{
     dto::{
         AddPortfolioImageRequest, CreatePortfolioCategoryRequest,
         PortfolioCategoryResponse, PortfolioImageResponse, PortfolioImagesPaginatedResponse,
-        UpdatePortfolioCategoryRequest,
+        UpdatePortfolioCategoryRequest, UpdatePortfolioCoverRequest,
     },
     state::AppState,
     ApiError,
@@ -25,6 +25,7 @@ use crate::application::{
     AddPortfolioImageUseCase, CreatePortfolioCategoryUseCase, DeletePortfolioCategoryUseCase,
     DeletePortfolioImageUseCase, GetPortfolioCategoriesUseCase,
     GetPortfolioImagesByCategoryUseCase, UpdatePortfolioCategoryUseCase,
+    UpdatePortfolioCoverUseCase,
 };
 
 #[derive(Debug, serde::Deserialize, utoipa::IntoParams)]
@@ -95,7 +96,7 @@ pub async fn list_portfolio_categories(
 #[utoipa::path(
     get,
     path = "/api/portfolio/categories/{category_id}/images",
-    tag = "portfolio",
+    tag = "portfolio_images",
     security(("bearer_auth" = [])),
     params(
         ("category_id" = Uuid, Path, description = "UUID de la categoría"),
@@ -204,11 +205,37 @@ pub async fn delete_portfolio_category(
     Ok(axum::http::StatusCode::NO_CONTENT)
 }
 
+/// Actualiza la portada (cover_url) de una categoría del portfolio.
+#[utoipa::path(
+    put,
+    path = "/api/portfolio/{id}/cover",
+    tag = "portfolio",
+    security(("bearer_auth" = [])),
+    params(("id" = Uuid, Path, description = "UUID de la categoría")),
+    request_body = UpdatePortfolioCoverRequest,
+    responses(
+        (status = 200, description = "Portada actualizada", body = PortfolioCategoryResponse),
+        (status = 401, description = "No autorizado", body = crate::api::dto::ErrorResponse),
+        (status = 404, description = "Categoría no encontrada", body = crate::api::dto::ErrorResponse),
+        (status = 500, description = "Error interno", body = crate::api::dto::ErrorResponse),
+    ),
+)]
+pub async fn update_portfolio_cover(
+    _auth: crate::api::auth::BearerAuth,
+    State(state): State<AppState>,
+    Path(id): Path<Uuid>,
+    Json(body): Json<UpdatePortfolioCoverRequest>,
+) -> Result<Json<PortfolioCategoryResponse>, ApiError> {
+    let uc = UpdatePortfolioCoverUseCase::new(Arc::clone(&state.portfolio_repo));
+    let item = uc.execute(id, &body.cover_url).await?;
+    Ok(Json(PortfolioCategoryResponse::from(item)))
+}
+
 /// Añade una imagen (base64) a una categoría del portfolio. La imagen se guarda en disco; la URL será /api/portfolio/images/{id}/image.
 #[utoipa::path(
     post,
     path = "/api/portfolio/categories/{category_id}/images",
-    tag = "portfolio",
+    tag = "portfolio_images",
     security(("bearer_auth" = [])),
     params(("category_id" = Uuid, Path, description = "UUID de la categoría")),
     request_body = AddPortfolioImageRequest,
@@ -254,7 +281,7 @@ pub async fn add_portfolio_image(
 #[utoipa::path(
     get,
     path = "/api/portfolio/images/{id}/image",
-    tag = "portfolio",
+    tag = "portfolio_images",
     params(("id" = Uuid, Path, description = "UUID de la imagen")),
     responses(
         (status = 200, description = "Imagen del portfolio", content_type = "image/*"),
@@ -293,7 +320,7 @@ pub async fn get_portfolio_image(
 #[utoipa::path(
     delete,
     path = "/api/portfolio/images/{id}",
-    tag = "portfolio",
+    tag = "portfolio_images",
     security(("bearer_auth" = [])),
     params(("id" = Uuid, Path, description = "UUID de la imagen")),
     responses(

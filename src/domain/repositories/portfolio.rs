@@ -20,6 +20,8 @@ pub trait PortfolioRepository: Send + Sync {
     async fn count_images_by_category(&self, category_id: Uuid) -> Result<u64, DomainError>;
     async fn create_category(&self, name: &str) -> Result<PortfolioCategory, DomainError>;
     async fn update_category(&self, id: Uuid, name: &str) -> Result<Option<PortfolioCategory>, DomainError>;
+    /// Actualiza solo la portada (cover_url) de la categoría.
+    async fn update_category_cover(&self, id: Uuid, cover_url: &str) -> Result<Option<PortfolioCategory>, DomainError>;
     async fn delete_category(&self, id: Uuid) -> Result<(), DomainError>;
     /// Añade una imagen con id conocido (para guardar el archivo como {id}.{ext}).
     async fn add_image_with_id(
