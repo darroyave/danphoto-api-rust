@@ -56,6 +56,7 @@ impl Modify for SecurityAddon {
         delete_evento,
         crate::api::handlers::theme_of_the_day::list_theme_of_the_day,
         crate::api::handlers::theme_of_the_day::get_theme_of_the_day_today,
+        crate::api::handlers::theme_of_the_day::get_theme_of_the_day_by_date,
         crate::api::handlers::theme_of_the_day::get_theme_of_the_day,
         crate::api::handlers::theme_of_the_day::get_theme_of_the_day_image,
         crate::api::handlers::theme_of_the_day::create_theme_of_the_day,

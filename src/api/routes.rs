@@ -42,8 +42,8 @@ use super::handlers::sesiones::{
 };
 use super::handlers::theme_of_the_day::{
     create_theme_of_the_day, delete_theme_of_the_day, get_theme_of_the_day,
-    get_theme_of_the_day_image, get_theme_of_the_day_today, list_theme_of_the_day,
-    update_theme_of_the_day,
+    get_theme_of_the_day_by_date, get_theme_of_the_day_image, get_theme_of_the_day_today,
+    list_theme_of_the_day, update_theme_of_the_day,
 };
 use super::handlers::usuarios::{
     get_profile, get_profile_avatar, update_profile, update_profile_avatar,
@@ -89,6 +89,10 @@ pub fn create_router(state: AppState, config: &crate::config::Config) -> Router 
         .route(
             "/api/theme-of-the-day/today",
             get(get_theme_of_the_day_today),
+        )
+        .route(
+            "/api/theme-of-the-day/date/{mmdd}",
+            get(get_theme_of_the_day_by_date),
         )
         .route("/api/theme-of-the-day/{id}/image", get(get_theme_of_the_day_image))
         .route(

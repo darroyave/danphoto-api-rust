@@ -80,6 +80,30 @@ pub async fn get_theme_of_the_day_today(
     Ok(Json(ThemeOfTheDayResponse::from(item)))
 }
 
+/// Obtiene el tema del día para una fecha dada (MMdd). Misma respuesta que /today pero con el parámetro MesDía.
+#[utoipa::path(
+    get,
+    path = "/api/theme-of-the-day/date/{mmdd}",
+    tag = "theme_of_the_day",
+    security(("bearer_auth" = [])),
+    params(("mmdd" = String, Path, description = "Fecha en formato MMdd (mes y día, 4 caracteres)")),
+    responses(
+        (status = 200, description = "Tema del día para la fecha indicada", body = ThemeOfTheDayResponse),
+        (status = 401, description = "No autorizado", body = ErrorResponse),
+        (status = 404, description = "No hay tema definido para esa fecha", body = ErrorResponse),
+        (status = 500, description = "Error interno", body = ErrorResponse),
+    ),
+)]
+pub async fn get_theme_of_the_day_by_date(
+    _auth: crate::api::auth::BearerAuth,
+    State(state): State<AppState>,
+    Path(mmdd): Path<String>,
+) -> Result<Json<ThemeOfTheDayResponse>, ApiError> {
+    let uc = GetThemeOfTheDayByIdUseCase::new(Arc::clone(&state.theme_of_the_day_repo));
+    let item = uc.execute(mmdd.trim()).await?;
+    Ok(Json(ThemeOfTheDayResponse::from(item)))
+}
+
 /// Lista todos los temas del día (requiere Bearer token).
 #[utoipa::path(
     get,
